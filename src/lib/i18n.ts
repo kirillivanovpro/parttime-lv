@@ -1,0 +1,283 @@
+'use client'
+
+export type Lang = 'lv' | 'ru'
+
+export const translations = {
+  lv: {
+    // Nav
+    nav_home: 'Sākums',
+    nav_listings: 'Sludinājumi',
+    nav_create: 'Publicēt',
+    nav_chat: 'Ziņas',
+    nav_profile: 'Profils',
+    nav_login: 'Ieiet',
+    nav_logout: 'Iziet',
+
+    // Home
+    hero_title: 'Atrodi palīgu vai piedāvā savus pakalpojumus',
+    hero_subtitle: 'Vietējais darba tirgus Latvijā — ātri, vienkārši, uzticami',
+    hero_cta_offer: 'Es varu palīdzēt',
+    hero_cta_request: 'Man vajag palīdzību',
+    section_offer: 'Es varu darīt',
+    section_request: 'Man vajag palīdzību',
+    section_offer_desc: 'Cilvēki, kas piedāvā savus pakalpojumus',
+    section_request_desc: 'Cilvēki, kuriem nepieciešama palīdzība',
+    view_all: 'Skatīt visus',
+    no_listings: 'Nav sludinājumu',
+    search_placeholder: 'Meklēt pakalpojumus...',
+
+    // Categories
+    cat_cleaning: 'Uzkopšana',
+    cat_dog_walking: 'Suņu pastaiga',
+    cat_tutoring: 'Apmācība',
+    cat_photo_video: 'Foto/Video',
+    cat_delivery: 'Piegāde',
+    cat_repairs: 'Remonts',
+    cat_all: 'Visi',
+
+    // Auth
+    auth_title: 'Pievienojies Part:time',
+    auth_subtitle: 'Piesakies vai reģistrējies, lai turpinātu',
+    auth_phone: 'Tālrunis',
+    auth_email: 'E-pasts',
+    auth_password: 'Parole',
+    auth_confirm_password: 'Apstiprināt paroli',
+    auth_login: 'Ieiet',
+    auth_register: 'Reģistrēties',
+    auth_or: 'vai',
+    auth_with_phone: 'Ar tālruni',
+    auth_with_email: 'Ar e-pastu',
+    auth_otp: 'OTP kods',
+    auth_send_otp: 'Nosūtīt kodu',
+    auth_verify: 'Apstiprināt',
+    auth_have_account: 'Jau ir konts?',
+    auth_no_account: 'Nav konta?',
+    auth_name: 'Vārds',
+
+    // Create listing
+    create_title: 'Jauns sludinājums',
+    create_type_offer: 'Es piedāvāju',
+    create_type_request: 'Man vajag',
+    create_category: 'Kategorija',
+    create_listing_title: 'Nosaukums',
+    create_listing_title_lv: 'Nosaukums latviski',
+    create_listing_title_ru: 'Nosaukums krieviski',
+    create_description_lv: 'Apraksts latviski',
+    create_description_ru: 'Apraksts krieviski',
+    create_price: 'Cena (€)',
+    create_price_unit: 'Par',
+    create_location: 'Atrašanās vieta',
+    create_submit: 'Publicēt',
+    create_success: 'Sludinājums publicēts!',
+    price_unit_hour: 'stundu',
+    price_unit_job: 'darbu',
+    price_unit_day: 'dienu',
+
+    // Listing card
+    contact: 'Sazināties',
+    per_hour: '/st.',
+    per_job: '/darbs',
+    per_day: '/dienā',
+    rating: 'Vērtējums',
+    reviews: 'atsauksmes',
+    review_singular: 'atsauksme',
+    location: 'Vieta',
+    posted: 'Publicēts',
+
+    // Reviews
+    reviews_title: 'Atsauksmes',
+    leave_review: 'Atstāt atsauksmi',
+    review_rating: 'Vērtējums',
+    review_comment: 'Komentārs (neobligāts)',
+    review_submit: 'Iesniegt',
+    review_success: 'Atsauksme pievienota!',
+    review_placeholder: 'Dalies ar savu pieredzi...',
+
+    // Chat
+    chat_title: 'Ziņas',
+    chat_placeholder: 'Rakstīt ziņu...',
+    chat_send: 'Sūtīt',
+    chat_no_conversations: 'Nav sarunu',
+    chat_start: 'Sākt sarunu',
+    chat_you: 'Tu',
+
+    // Profile
+    profile_title: 'Mans profils',
+    profile_edit: 'Rediģēt',
+    profile_save: 'Saglabāt',
+    profile_name: 'Vārds',
+    profile_bio: 'Par sevi',
+    profile_wallet: 'Maks',
+    profile_balance: 'Atlikums',
+    profile_deposit: 'Papildināt',
+    profile_withdraw: 'Izņemt',
+    profile_transactions: 'Darījumi',
+    profile_my_listings: 'Mani sludinājumi',
+    profile_no_listings: 'Nav sludinājumu',
+    profile_reviews: 'Atsauksmes',
+    deposit_amount: 'Summa (€)',
+    deposit_submit: 'Apstiprināt',
+    transaction_deposit: 'Papildināšana',
+    transaction_withdrawal: 'Izņemšana',
+    transaction_payment: 'Maksājums',
+    transaction_earning: 'Ieņēmums',
+
+    // General
+    loading: 'Ielādē...',
+    error: 'Kļūda',
+    cancel: 'Atcelt',
+    close: 'Aizvērt',
+    save: 'Saglabāt',
+    delete: 'Dzēst',
+    confirm: 'Apstiprināt',
+    back: 'Atpakaļ',
+    offer_badge: 'Piedāvāju',
+    request_badge: 'Meklēju',
+  },
+  ru: {
+    // Nav
+    nav_home: 'Главная',
+    nav_listings: 'Объявления',
+    nav_create: 'Создать',
+    nav_chat: 'Сообщения',
+    nav_profile: 'Профиль',
+    nav_login: 'Войти',
+    nav_logout: 'Выйти',
+
+    // Home
+    hero_title: 'Найди помощника или предложи свои услуги',
+    hero_subtitle: 'Местный рынок труда в Латвии — быстро, просто, надёжно',
+    hero_cta_offer: 'Я могу помочь',
+    hero_cta_request: 'Мне нужна помощь',
+    section_offer: 'Я могу сделать',
+    section_request: 'Нужна помощь',
+    section_offer_desc: 'Люди, предлагающие свои услуги',
+    section_request_desc: 'Люди, которым нужна помощь',
+    view_all: 'Смотреть все',
+    no_listings: 'Нет объявлений',
+    search_placeholder: 'Поиск услуг...',
+
+    // Categories
+    cat_cleaning: 'Уборка',
+    cat_dog_walking: 'Выгул собак',
+    cat_tutoring: 'Репетиторство',
+    cat_photo_video: 'Фото/Видео',
+    cat_delivery: 'Доставка',
+    cat_repairs: 'Ремонт',
+    cat_all: 'Все',
+
+    // Auth
+    auth_title: 'Присоединяйся к Part:time',
+    auth_subtitle: 'Войди или зарегистрируйся чтобы продолжить',
+    auth_phone: 'Телефон',
+    auth_email: 'Email',
+    auth_password: 'Пароль',
+    auth_confirm_password: 'Подтвердить пароль',
+    auth_login: 'Войти',
+    auth_register: 'Регистрация',
+    auth_or: 'или',
+    auth_with_phone: 'По телефону',
+    auth_with_email: 'По email',
+    auth_otp: 'OTP код',
+    auth_send_otp: 'Отправить код',
+    auth_verify: 'Подтвердить',
+    auth_have_account: 'Уже есть аккаунт?',
+    auth_no_account: 'Нет аккаунта?',
+    auth_name: 'Имя',
+
+    // Create listing
+    create_title: 'Новое объявление',
+    create_type_offer: 'Предлагаю',
+    create_type_request: 'Ищу',
+    create_category: 'Категория',
+    create_listing_title: 'Заголовок',
+    create_listing_title_lv: 'Заголовок на латышском',
+    create_listing_title_ru: 'Заголовок на русском',
+    create_description_lv: 'Описание на латышском',
+    create_description_ru: 'Описание на русском',
+    create_price: 'Цена (€)',
+    create_price_unit: 'За',
+    create_location: 'Местоположение',
+    create_submit: 'Опубликовать',
+    create_success: 'Объявление опубликовано!',
+    price_unit_hour: 'час',
+    price_unit_job: 'работу',
+    price_unit_day: 'день',
+
+    // Listing card
+    contact: 'Связаться',
+    per_hour: '/ч.',
+    per_job: '/работа',
+    per_day: '/день',
+    rating: 'Рейтинг',
+    reviews: 'отзывы',
+    review_singular: 'отзыв',
+    location: 'Место',
+    posted: 'Опубликовано',
+
+    // Reviews
+    reviews_title: 'Отзывы',
+    leave_review: 'Оставить отзыв',
+    review_rating: 'Оценка',
+    review_comment: 'Комментарий (необязательно)',
+    review_submit: 'Отправить',
+    review_success: 'Отзыв добавлен!',
+    review_placeholder: 'Расскажи о своём опыте...',
+
+    // Chat
+    chat_title: 'Сообщения',
+    chat_placeholder: 'Написать сообщение...',
+    chat_send: 'Отправить',
+    chat_no_conversations: 'Нет переписок',
+    chat_start: 'Начать переписку',
+    chat_you: 'Вы',
+
+    // Profile
+    profile_title: 'Мой профиль',
+    profile_edit: 'Редактировать',
+    profile_save: 'Сохранить',
+    profile_name: 'Имя',
+    profile_bio: 'О себе',
+    profile_wallet: 'Кошелёк',
+    profile_balance: 'Баланс',
+    profile_deposit: 'Пополнить',
+    profile_withdraw: 'Вывести',
+    profile_transactions: 'Транзакции',
+    profile_my_listings: 'Мои объявления',
+    profile_no_listings: 'Нет объявлений',
+    profile_reviews: 'Отзывы',
+    deposit_amount: 'Сумма (€)',
+    deposit_submit: 'Подтвердить',
+    transaction_deposit: 'Пополнение',
+    transaction_withdrawal: 'Вывод',
+    transaction_payment: 'Оплата',
+    transaction_earning: 'Заработок',
+
+    // General
+    loading: 'Загрузка...',
+    error: 'Ошибка',
+    cancel: 'Отмена',
+    close: 'Закрыть',
+    save: 'Сохранить',
+    delete: 'Удалить',
+    confirm: 'Подтвердить',
+    back: 'Назад',
+    offer_badge: 'Предлагаю',
+    request_badge: 'Ищу',
+  },
+}
+
+export type TranslationKey = keyof typeof translations['lv']
+
+export function t(lang: Lang, key: TranslationKey): string {
+  return translations[lang][key] ?? translations['lv'][key] ?? key
+}
+
+export const CATEGORIES = [
+  'cleaning',
+  'dog_walking',
+  'tutoring',
+  'photo_video',
+  'delivery',
+  'repairs',
+] as const
