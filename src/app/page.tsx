@@ -18,7 +18,7 @@ export default function HomePage() {
   const { T } = useLang();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'offer' | 'request'>('offer');
+  const [activeTab, setActiveTab] = useState<'can_do' | 'need_help'>('can_do');
   const [activeCategory, setActiveCategory] = useState<CategoryType | null>(null);
 
   useEffect(() => {
@@ -60,9 +60,9 @@ export default function HomePage() {
           {/* Two sections */}
           <div className="grid grid-cols-2 gap-4 max-w-xl mx-auto mb-12">
             <button
-              onClick={() => setActiveTab('offer')}
+              onClick={() => setActiveTab('can_do')}
               className={`p-6 rounded-2xl border-2 transition-all text-left ${
-                activeTab === 'offer'
+                activeTab === 'can_do'
                   ? 'border-[#8BC34A] bg-[#8BC34A]/10'
                   : 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#8BC34A]/40'
               }`}
@@ -73,9 +73,9 @@ export default function HomePage() {
             </button>
 
             <button
-              onClick={() => setActiveTab('request')}
+              onClick={() => setActiveTab('need_help')}
               className={`p-6 rounded-2xl border-2 transition-all text-left ${
-                activeTab === 'request'
+                activeTab === 'need_help'
                   ? 'border-[#8BC34A] bg-[#8BC34A]/10'
                   : 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#8BC34A]/40'
               }`}

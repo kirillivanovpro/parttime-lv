@@ -20,7 +20,7 @@ export default function EditListingPage() {
   const { T } = useLang();
   const { user } = useAuth();
 
-  const [type, setType] = useState<ListingType>('offer');
+  const [type, setType] = useState<ListingType>('can_do');
   const [category, setCategory] = useState<CategoryType>('cleaning');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -65,25 +65,30 @@ export default function EditListingPage() {
     setSaving(true);
     setError('');
 
-    const { error } = await supabase
-      .from('listings')
-      .update({
-        type,
-        category,
-        title: title.trim(),
-        description: description.trim() || null,
-        price: price ? parseFloat(price) : null,
-        price_unit: priceUnit,
-        location: location.trim() || null,
-        is_active: isActive,
-      })
-      .eq('id', id);
+    try {
+      const { error } = await supabase
+        .from('listings')
+        .update({
+          type,
+          category,
+          title: title.trim(),
+          description: description.trim() || null,
+          price: price ? parseFloat(price) : null,
+          price_unit: priceUnit,
+          location: location.trim() || null,
+          is_active: isActive,
+        })
+        .eq('id', id);
 
-    if (error) {
-      setError(error.message);
-      setSaving(false);
-    } else {
+      if (error) {
+        setError(error.message);
+        return;
+      }
       router.push(`/listings/${id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unexpected error');
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -116,7 +121,7 @@ export default function EditListingPage() {
           <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5">
             <label className="block text-sm font-medium text-gray-400 mb-3">{T('listing_type')}</label>
             <div className="grid grid-cols-2 gap-3">
-              {(['offer', 'request'] as ListingType[]).map((t) => (
+              {(['can_do', 'need_help'] as ListingType[]).map((t) => (
                 <button
                   key={t}
                   type="button"
