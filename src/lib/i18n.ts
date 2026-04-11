@@ -49,8 +49,8 @@ export const translations = {
     // Listing
     create_new_listing: 'Jauns sludinājums',
     listing_type: 'Tips',
-    offer: 'Piedāvājums',
-    request: 'Pieprasījums',
+    can_do: 'Piedāvājums',
+    need_help: 'Pieprasījums',
     category: 'Kategorija',
     title: 'Virsraksts',
     description: 'Apraksts',
@@ -158,8 +158,8 @@ export const translations = {
     // Listing
     create_new_listing: 'Новое объявление',
     listing_type: 'Тип',
-    offer: 'Предложение',
-    request: 'Запрос',
+    can_do: 'Предложение',
+    need_help: 'Запрос',
     category: 'Категория',
     title: 'Заголовок',
     description: 'Описание',

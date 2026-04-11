@@ -25,7 +25,7 @@ create type public.category_type as enum (
 );
 
 -- Listing type enum
-create type public.listing_type as enum ('offer', 'request');
+create type public.listing_type as enum ('can_do', 'need_help');
 
 -- Listings table
 create table public.listings (

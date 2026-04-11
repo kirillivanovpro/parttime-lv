@@ -32,7 +32,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           </div>
           <span
             className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-              listing.type === 'offer'
+              listing.type === 'can_do'
                 ? 'bg-blue-900/30 text-blue-400'
                 : 'bg-purple-900/30 text-purple-400'
             }`}

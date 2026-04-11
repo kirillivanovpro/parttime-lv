@@ -19,7 +19,7 @@ export default function CreateListingPage() {
   const { T } = useLang();
   const { user } = useAuth();
 
-  const [type, setType] = useState<ListingType>('offer');
+  const [type, setType] = useState<ListingType>('can_do');
   const [category, setCategory] = useState<CategoryType>('cleaning');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -50,22 +50,27 @@ export default function CreateListingPage() {
     setLoading(true);
     setError('');
 
-    const { data, error } = await supabase.from('listings').insert({
-      user_id: user!.id,
-      type,
-      category,
-      title: title.trim(),
-      description: description.trim() || null,
-      price: price ? parseFloat(price) : null,
-      price_unit: priceUnit,
-      location: location.trim() || null,
-    }).select().single();
+    try {
+      const { data, error } = await supabase.from('listings').insert({
+        user_id: user!.id,
+        type,
+        category,
+        title: title.trim(),
+        description: description.trim() || null,
+        price: price ? parseFloat(price) : null,
+        price_unit: priceUnit,
+        location: location.trim() || null,
+      }).select('id').single();
 
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-    } else {
+      if (error) {
+        setError(error.message);
+        return;
+      }
       router.push(`/listings/${data.id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unexpected error');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -92,7 +97,7 @@ export default function CreateListingPage() {
               {T('listing_type')}
             </label>
             <div className="grid grid-cols-2 gap-3">
-              {(['offer', 'request'] as ListingType[]).map((t) => (
+              {(['can_do', 'need_help'] as ListingType[]).map((t) => (
                 <button
                   key={t}
                   type="button"

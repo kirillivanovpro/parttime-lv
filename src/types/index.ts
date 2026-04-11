@@ -1,4 +1,4 @@
-export type ListingType = 'offer' | 'request';
+export type ListingType = 'can_do' | 'need_help';
 
 export type CategoryType =
   | 'cleaning'
