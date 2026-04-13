@@ -28,7 +28,13 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Protect authenticated-only routes
-  if (!user && (pathname.startsWith('/onboarding') || pathname.startsWith('/dashboard'))) {
+  if (
+    !user &&
+    (pathname.startsWith('/onboarding') ||
+      pathname.startsWith('/dashboard') ||
+      pathname.startsWith('/jobs/new') ||
+      pathname.startsWith('/payment'))
+  ) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 

@@ -113,3 +113,27 @@ export interface EmployerProfile {
 }
 
 export type Lang = 'lv' | 'ru';
+
+export type JobCategory = 'retail' | 'hospitality' | 'warehouse' | 'office' | 'other';
+export type JobStatus = 'draft' | 'active' | 'paused' | 'closed';
+export type JobSchedule = 'mornings' | 'evenings' | 'weekends' | 'flexible' | 'shifts';
+
+export interface JobPosting {
+  id: string;
+  employer_id: string;
+  title: string;
+  description: string;
+  category: JobCategory | null;
+  city: string;
+  salary_min: number | null;
+  salary_max: number | null;
+  schedule: JobSchedule | null;
+  hours_per_week: number | null;
+  status: JobStatus;
+  views: number;
+  is_paid: boolean;
+  expires_at: string | null;
+  created_at: string;
+  updated_at: string;
+  employer_profiles?: EmployerProfile;
+}

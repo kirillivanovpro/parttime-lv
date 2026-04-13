@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import type { EmployerProfile } from '@/types'
+import type { EmployerProfile, JobPosting } from '@/types'
+import { JOB_SCHEDULE_LABELS } from '@/lib/jobs'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -22,6 +23,16 @@ export default async function CompanyProfilePage({ params }: Props) {
   if (!employer) notFound()
 
   const isOwner = user?.id === id
+
+  const { data: jobsData } = await supabase
+    .from('job_postings')
+    .select('id, title, city, salary_min, salary_max, schedule, hours_per_week, created_at, status, views, is_paid, expires_at, updated_at, employer_id, category')
+    .eq('employer_id', employer.id)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+    .limit(10)
+
+  const jobs = (jobsData ?? []) as JobPosting[]
 
   return (
     <div className="min-h-[calc(100vh-56px)] px-4 py-8">
@@ -87,20 +98,49 @@ export default async function CompanyProfilePage({ params }: Props) {
           </div>
         )}
 
-        {/* Active job listings placeholder */}
+        {/* Active job listings */}
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5">
           <div className="flex justify-between items-center mb-4">
             <h2 className="font-semibold text-white">Активные вакансии</h2>
             {isOwner && (
               <Link
-                href="/jobs/create"
+                href="/jobs/new"
                 className="text-sm bg-[#8BC34A] text-black font-medium px-4 py-1.5 rounded-lg hover:bg-[#9DD45B] transition-colors"
               >
                 + Разместить
               </Link>
             )}
           </div>
-          <p className="text-gray-500 text-sm">Вакансии появятся здесь после публикации.</p>
+          {jobs.length === 0 ? (
+            <p className="text-gray-500 text-sm">Активных вакансий нет.</p>
+          ) : (
+            <div className="space-y-3">
+              {jobs.map((job) => (
+                <Link
+                  key={job.id}
+                  href={`/jobs/${job.id}`}
+                  className="block border border-[#2a2a2a] rounded-xl p-4 hover:border-[#8BC34A]/40 transition-colors group"
+                >
+                  <h3 className="text-white text-sm font-medium group-hover:text-[#8BC34A] transition-colors">{job.title}</h3>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <span className="text-xs text-gray-500">📍 {job.city}</span>
+                    {job.schedule && (
+                      <span className="text-xs text-gray-500">🕐 {JOB_SCHEDULE_LABELS[job.schedule]}</span>
+                    )}
+                    {(job.salary_min || job.salary_max) && (
+                      <span className="text-xs text-[#8BC34A]">
+                        {job.salary_min && job.salary_max
+                          ? `${job.salary_min}–${job.salary_max} €`
+                          : job.salary_min
+                          ? `от ${job.salary_min} €`
+                          : `до ${job.salary_max} €`}
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
