@@ -85,4 +85,31 @@ export interface WalletTransaction {
   created_at: string;
 }
 
+export type ScheduleType = 'flexible' | 'mornings' | 'evenings' | 'weekends';
+
+export interface SeekerProfile {
+  id: string;
+  user_id: string;
+  bio: string | null;
+  skills: string[];
+  experience_years: number;
+  desired_salary: number | null;
+  city: string | null;
+  schedule: ScheduleType | null;
+  cv_url: string | null;
+  is_visible: boolean;
+  updated_at: string;
+}
+
+export interface EmployerProfile {
+  id: string;
+  user_id: string;
+  company_name: string;
+  company_description: string | null;
+  website: string | null;
+  logo_url: string | null;
+  city: string | null;
+  updated_at: string;
+}
+
 export type Lang = 'lv' | 'ru';
