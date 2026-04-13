@@ -10,6 +10,8 @@ export type CategoryType =
 
 export type TransactionType = 'credit' | 'debit' | 'hold' | 'release';
 
+export type UserRole = 'seeker' | 'employer' | 'admin';
+
 export interface Profile {
   id: string;
   full_name: string | null;
@@ -19,6 +21,8 @@ export interface Profile {
   rating_avg: number;
   rating_count: number;
   wallet_balance: number;
+  role: UserRole;
+  plan: string;
   created_at: string;
 }
 
