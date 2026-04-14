@@ -137,3 +137,17 @@ export interface JobPosting {
   updated_at: string;
   employer_profiles?: EmployerProfile;
 }
+
+export type ApplicationStatus = 'new' | 'viewed' | 'invited' | 'rejected'
+
+export interface Application {
+  id: string
+  job_id: string
+  seeker_id: string
+  message: string | null
+  status: ApplicationStatus
+  created_at: string
+  updated_at: string
+  job_postings?: JobPosting
+  seeker_profiles?: SeekerProfile & { profiles?: { full_name: string | null } }
+}
