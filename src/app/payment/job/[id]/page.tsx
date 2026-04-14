@@ -7,6 +7,8 @@ interface Props {
   params: Promise<{ id: string }>
 }
 
+const PRICE_DISPLAY = ((Number(process.env.PRICE_JOB_POSTING ?? '30')) / 100).toFixed(2)
+
 export default async function PaymentJobPage({ params }: Props) {
   const { id } = await params
   const supabase = await createClient()
@@ -25,7 +27,7 @@ export default async function PaymentJobPage({ params }: Props) {
   const employerUserId = (job.employer_profiles as unknown as { user_id: string }).user_id
   if (employerUserId !== user.id) notFound()
 
-  if (job.is_paid && job.status === 'active') redirect(`/jobs/${id}`)
+  if (job.is_paid) redirect(`/jobs/${id}`)
 
   return (
     <div className="min-h-[calc(100vh-56px)] px-4 py-8">
@@ -36,25 +38,21 @@ export default async function PaymentJobPage({ params }: Props) {
         </div>
 
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-6 space-y-5">
-          {/* Job summary */}
           <div className="bg-[#111] rounded-xl p-4 border border-[#2a2a2a]">
             <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Вакансия</p>
             <p className="text-white font-medium">{job.title}</p>
           </div>
 
-          {/* Price breakdown */}
           <div className="flex justify-between items-center py-3 border-t border-b border-[#2a2a2a]">
             <div>
               <p className="text-white font-medium">Публикация вакансии</p>
               <p className="text-gray-500 text-sm">Активна 30 дней · Stripe Checkout</p>
             </div>
-            <p className="text-[#8BC34A] text-2xl font-bold">€10</p>
+            <p className="text-[#8BC34A] text-2xl font-bold">€{PRICE_DISPLAY}</p>
           </div>
 
-          {/* Stripe Checkout button */}
-          <CheckoutButton jobId={id} />
+          <CheckoutButton jobId={id} type="job_posting" label={`💳 Оплатить €${PRICE_DISPLAY} картой`} />
 
-          {/* Stripe trust badge */}
           <p className="text-center text-xs text-gray-600">
             🔒 Безопасная оплата через Stripe. Мы не храним данные карты.
           </p>

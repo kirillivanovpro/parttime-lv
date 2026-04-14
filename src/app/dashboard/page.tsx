@@ -123,23 +123,35 @@ export default async function DashboardPage() {
         </div>
 
         {/* Stats / links */}
-        {isSeeker ? (
-          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5">
-            <h2 className="font-semibold text-white mb-4">Мои отклики</h2>
-            <p className="text-gray-500 text-sm">Здесь будут отображаться ваши отклики на вакансии.</p>
-          </div>
-        ) : (
+        <div className="space-y-3">
+          {isSeeker ? (
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5">
+              <h2 className="font-semibold text-white mb-2">Мои отклики</h2>
+              <p className="text-gray-500 text-sm">Здесь будут отображаться ваши отклики на вакансии.</p>
+            </div>
+          ) : (
+            <Link
+              href="/dashboard/jobs"
+              className="block bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5 hover:border-[#8BC34A]/40 transition-colors group"
+            >
+              <div className="flex justify-between items-center">
+                <h2 className="font-semibold text-white group-hover:text-[#8BC34A] transition-colors">Мои вакансии</h2>
+                <span className="text-gray-500 text-sm group-hover:text-[#8BC34A] transition-colors">→</span>
+              </div>
+              <p className="text-gray-500 text-sm mt-1">Просмотр, пауза и управление вакансиями</p>
+            </Link>
+          )}
           <Link
-            href="/dashboard/jobs"
+            href="/dashboard/payments"
             className="block bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5 hover:border-[#8BC34A]/40 transition-colors group"
           >
             <div className="flex justify-between items-center">
-              <h2 className="font-semibold text-white group-hover:text-[#8BC34A] transition-colors">Мои вакансии</h2>
+              <h2 className="font-semibold text-white group-hover:text-[#8BC34A] transition-colors">История платежей</h2>
               <span className="text-gray-500 text-sm group-hover:text-[#8BC34A] transition-colors">→</span>
             </div>
-            <p className="text-gray-500 text-sm mt-1">Просмотр, пауза и управление вакансиями</p>
+            <p className="text-gray-500 text-sm mt-1">Все ваши транзакции через Stripe</p>
           </Link>
-        )}
+        </div>
       </div>
     </div>
   )

@@ -4,10 +4,13 @@ import Link from 'next/link'
 import type { JobPosting } from '@/types'
 import { JOB_CATEGORY_LABELS, JOB_SCHEDULE_LABELS } from '@/lib/jobs'
 import ViewTracker from './ViewTracker'
+import ContactBlock from './ContactBlock'
 
 interface Props {
   params: Promise<{ id: string }>
 }
+
+const PRICE_CONTACT = Number(process.env.PRICE_CONTACT_UNLOCK ?? '30')
 
 export default async function JobDetailPage({ params }: Props) {
   const { id } = await params
@@ -23,28 +26,90 @@ export default async function JobDetailPage({ params }: Props) {
 
   if (error || !data) notFound()
 
-  const job = data as JobPosting & { employer_profiles: { id: string; company_name: string; logo_url: string | null; city: string | null; website: string | null; company_description: string | null; user_id: string } }
+  const job = data as JobPosting & {
+    employer_profiles: {
+      id: string
+      company_name: string
+      logo_url: string | null
+      city: string | null
+      website: string | null
+      company_description: string | null
+      user_id: string
+    }
+  }
 
-  // Only active jobs visible to non-owners
   const employerUserId = job.employer_profiles.user_id
   if (job.status !== 'active' && user?.id !== employerUserId) notFound()
 
   const isOwner = user?.id === employerUserId
+
+  // Determine seeker contact unlock status server-side
+  let isSeeker = false
+  let contactEmail: string | null = null
+  let contactLocked = true
+
+  if (user && !isOwner) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    isSeeker = profile?.role === 'seeker'
+
+    if (isSeeker) {
+      const { data: seekerProfile } = await supabase
+        .from('seeker_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (seekerProfile) {
+        const { data: unlock } = await supabase
+          .from('contact_unlocks')
+          .select('id')
+          .eq('seeker_id', seekerProfile.id)
+          .eq('job_id', id)
+          .maybeSingle()
+
+        if (unlock) {
+          contactLocked = false
+          // Fetch employer email via server-side service role fetch
+          const serviceUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+          const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+          if (serviceKey) {
+            const { createClient: createServiceClient } = await import('@supabase/supabase-js')
+            const adminClient = createServiceClient(serviceUrl, serviceKey)
+            const { data: empUser } = await adminClient.auth.admin.getUserById(employerUserId)
+            contactEmail = empUser?.user?.email ?? null
+          }
+        }
+      }
+    }
+  }
 
   return (
     <div className="min-h-[calc(100vh-56px)] px-4 py-8">
       <ViewTracker jobId={id} />
 
       <div className="max-w-3xl mx-auto">
-        {/* Back */}
-        <Link href="/jobs" className="text-sm text-gray-400 hover:text-white transition-colors mb-6 inline-flex items-center gap-1">
+        <Link
+          href="/jobs"
+          className="text-sm text-gray-400 hover:text-white transition-colors mb-6 inline-flex items-center gap-1"
+        >
           ← Все вакансии
         </Link>
 
-        {/* Status banner for owner */}
         {isOwner && job.status !== 'active' && (
           <div className="bg-yellow-900/20 border border-yellow-700/40 rounded-xl px-4 py-3 mb-4 text-yellow-400 text-sm">
-            Статус вакансии: <strong>{job.status === 'draft' ? 'Черновик' : job.status === 'paused' ? 'Приостановлена' : 'Закрыта'}</strong>
+            Статус вакансии:{' '}
+            <strong>
+              {job.status === 'draft'
+                ? 'Черновик'
+                : job.status === 'paused'
+                ? 'Приостановлена'
+                : 'Закрыта'}
+            </strong>
             {job.status === 'draft' && ' — оплатите публикацию, чтобы активировать'}
           </div>
         )}
@@ -92,22 +157,10 @@ export default async function JobDetailPage({ params }: Props) {
             {/* Description */}
             <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-6">
               <h2 className="text-xs text-gray-500 uppercase tracking-wide mb-3">Описание вакансии</h2>
-              <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{job.description}</div>
-            </div>
-
-            {/* Apply */}
-            {!isOwner && job.status === 'active' && (
-              <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-6">
-                <p className="text-gray-400 text-sm mb-3">Хотите откликнуться на эту вакансию?</p>
-                <button
-                  disabled
-                  className="w-full bg-[#8BC34A] text-black font-bold py-3 rounded-xl opacity-60 cursor-not-allowed text-sm"
-                >
-                  🔒 Откликнуться — скоро
-                </button>
-                <p className="text-gray-600 text-xs mt-2">Функция будет доступна в ближайшее время</p>
+              <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
+                {job.description}
               </div>
-            )}
+            </div>
 
             {/* Owner controls */}
             {isOwner && (
@@ -119,7 +172,7 @@ export default async function JobDetailPage({ params }: Props) {
                       href={`/payment/job/${job.id}`}
                       className="bg-[#8BC34A] text-black font-bold px-4 py-2 rounded-xl text-sm hover:bg-[#9DD45B] transition-colors"
                     >
-                      Оплатить публикацию (€10)
+                      Оплатить публикацию
                     </Link>
                   )}
                   <Link
@@ -176,6 +229,18 @@ export default async function JobDetailPage({ params }: Props) {
                 </a>
               )}
             </div>
+
+            {/* Contact block — for seekers and guests */}
+            {!isOwner && job.status === 'active' && (
+              <ContactBlock
+                jobId={id}
+                initialEmail={contactEmail}
+                isLocked={contactLocked}
+                price={PRICE_CONTACT}
+                isLoggedIn={!!user}
+                isSeeker={isSeeker}
+              />
+            )}
 
             {/* Stats */}
             <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5">

@@ -4,9 +4,11 @@ import { useState } from 'react'
 
 interface Props {
   jobId: string
+  type: 'job_posting' | 'contact_unlock'
+  label: string
 }
 
-export default function CheckoutButton({ jobId }: Props) {
+export default function CheckoutButton({ jobId, type, label }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -15,12 +17,17 @@ export default function CheckoutButton({ jobId }: Props) {
     setError(null)
 
     try {
-      const res = await fetch('/api/payments/checkout', {
+      const res = await fetch('/api/payments/create-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ job_id: jobId }),
+        body: JSON.stringify({ type, job_id: jobId }),
       })
       const data = await res.json()
+
+      if (data.already_unlocked) {
+        window.location.reload()
+        return
+      }
       if (!res.ok || !data.url) {
         setError(data.error ?? 'Ошибка при создании сессии оплаты')
         setLoading(false)
@@ -35,15 +42,13 @@ export default function CheckoutButton({ jobId }: Props) {
 
   return (
     <div>
-      {error && (
-        <p className="text-red-400 text-sm mb-3">{error}</p>
-      )}
+      {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
       <button
         onClick={handleClick}
         disabled={loading}
         className="w-full bg-[#8BC34A] text-black font-bold py-3.5 rounded-xl hover:bg-[#9DD45B] disabled:opacity-60 disabled:cursor-not-allowed transition-colors text-sm"
       >
-        {loading ? 'Переход к оплате...' : '💳 Оплатить €10 картой'}
+        {loading ? 'Переход к оплате...' : label}
       </button>
     </div>
   )

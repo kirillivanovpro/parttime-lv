@@ -3,10 +3,17 @@ import { verifyWebhookSignature } from '@/lib/stripe/webhook'
 import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
 
-// Use service role to bypass RLS for webhook writes
+export const dynamic = 'force-dynamic'
+
+// Service role client to bypass RLS for webhook writes
 function createServiceClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY!
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!url || !key) {
+    throw new Error('Missing Supabase service role credentials')
+  }
+
   return createClient(url, key)
 }
 
@@ -14,108 +21,132 @@ export async function POST(request: NextRequest) {
   const payload = await request.text()
   const signature = request.headers.get('stripe-signature')
 
-  if (!signature) return NextResponse.json({ error: 'Missing signature' }, { status: 400 })
+  if (!signature) {
+    return NextResponse.json({ error: 'Missing signature' }, { status: 400 })
+  }
 
   let event: Stripe.Event
   try {
     event = verifyWebhookSignature(payload, signature)
-  } catch {
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err)
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
-  // Idempotency: skip already-processed events
   const supabase = createServiceClient()
 
-  const { data: existing } = await supabase
-    .from('payments')
-    .select('id')
-    .eq('stripe_event_id', event.id)
-    .maybeSingle()
-
-  if (existing) return NextResponse.json({ received: true })
-
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Stripe.Checkout.Session
-
-    const metadata = session.metadata ?? {}
-    const type = metadata.type
-    const userId = metadata.user_id
-    const jobId = metadata.job_id ?? null
-
-    if (type !== 'job_posting' || !userId) {
-      return NextResponse.json({ received: true })
+  try {
+    if (event.type === 'checkout.session.completed') {
+      await handleCheckoutCompleted(supabase, event)
+    } else if (event.type === 'checkout.session.expired') {
+      await handleCheckoutExpired(supabase, event)
     }
-
-    const amountTotal = session.amount_total ?? 0
-
-    // Log payment with idempotency ON CONFLICT
-    const { error: insertErr } = await supabase
-      .from('payments')
-      .insert({
-        user_id: userId,
-        stripe_payment_id: session.id,
-        stripe_event_id: event.id,
-        type: 'job_posting',
-        status: 'paid',
-        amount_eur: amountTotal,
-        job_id: jobId,
-        metadata,
-      })
-      // ON CONFLICT handled by unique constraint — ignore duplicate
-      .select()
-
-    if (insertErr && !insertErr.message.includes('duplicate')) {
-      console.error('Payment insert error:', insertErr)
-      return NextResponse.json({ error: 'DB error' }, { status: 500 })
-    }
-
-    // Activate the job posting for 30 days
-    if (jobId) {
-      const expiresAt = new Date()
-      expiresAt.setDate(expiresAt.getDate() + 30)
-
-      const { error: updateErr } = await supabase
-        .from('job_postings')
-        .update({
-          status: 'active',
-          is_paid: true,
-          expires_at: expiresAt.toISOString(),
-        })
-        .eq('id', jobId)
-        .eq('status', 'draft') // only activate drafts
-
-      if (updateErr) {
-        console.error('Job activation error:', updateErr)
-      }
-    }
-  }
-
-  if (event.type === 'checkout.session.expired') {
-    const session = event.data.object as Stripe.Checkout.Session
-    const metadata = session.metadata ?? {}
-    const userId = metadata.user_id
-
-    if (userId) {
-      await supabase
-        .from('payments')
-        .insert({
-          user_id: userId,
-          stripe_payment_id: session.id,
-          stripe_event_id: event.id,
-          type: metadata.type ?? 'job_posting',
-          status: 'failed',
-          amount_eur: 0,
-          job_id: metadata.job_id ?? null,
-          metadata,
-        })
-        .select()
-    }
+  } catch (err) {
+    // Log error but return 200 to Stripe to prevent retries on permanent failures
+    console.error(`Webhook handler error for event ${event.id}:`, err)
   }
 
   return NextResponse.json({ received: true })
 }
 
-// Disable body parsing — Stripe needs the raw body for signature verification
-export const config = {
-  api: { bodyParser: false },
+async function handleCheckoutCompleted(
+  supabase: ReturnType<typeof createServiceClient>,
+  event: Stripe.Event
+) {
+  const session = event.data.object as Stripe.Checkout.Session
+  const metadata = session.metadata ?? {}
+
+  const type = metadata.type as 'job_posting' | 'contact_unlock' | undefined
+  const userId = metadata.user_id
+  const jobId = metadata.job_id
+  const paymentDbId = metadata.payment_db_id
+  const seekerId = metadata.seeker_id
+
+  if (!type || !userId || !paymentDbId) {
+    console.error('Missing required metadata in checkout session:', metadata)
+    return
+  }
+
+  const paymentIntentId =
+    typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : session.payment_intent?.id ?? session.id
+
+  // Update payment record to completed
+  // Atomic idempotency: only update if still pending (prevents race condition)
+  const { data: updated, error: updateError } = await supabase
+    .from('payments')
+    .update({
+      status: 'completed',
+      stripe_payment_id: paymentIntentId,
+    })
+    .eq('id', paymentDbId)
+    .eq('status', 'pending')  // only if not already processed
+    .select('id')
+
+  if (updateError) {
+    console.error('Payment update error:', updateError)
+    throw updateError
+  }
+
+  // If no rows updated, this event was already processed — skip
+  if (!updated || updated.length === 0) {
+    console.log('Payment already processed, skipping:', paymentDbId)
+    return
+  }
+
+  if (type === 'job_posting' && jobId) {
+    const expiresAt = new Date()
+    expiresAt.setDate(expiresAt.getDate() + 30)
+
+    const { error: jobError } = await supabase
+      .from('job_postings')
+      .update({
+        status: 'active',
+        is_paid: true,
+        expires_at: expiresAt.toISOString(),
+      })
+      .eq('id', jobId)
+      .eq('status', 'draft')
+      .eq('is_paid', false)
+
+    if (jobError) {
+      console.error('Job activation error:', jobError)
+    }
+  } else if (type === 'contact_unlock' && seekerId && jobId) {
+    // Insert contact unlock record
+    // ON CONFLICT DO NOTHING via unique constraint ensures idempotency
+    const { error: unlockError } = await supabase
+      .from('contact_unlocks')
+      .insert({
+        seeker_id: seekerId,
+        job_id: jobId,
+        payment_id: paymentDbId,
+      })
+
+    if (unlockError) {
+      // Duplicate key means already unlocked - that's fine
+      if (!unlockError.message?.includes('duplicate') && unlockError.code !== '23505') {
+        console.error('Contact unlock insert error:', unlockError)
+      }
+    }
+  }
+}
+
+async function handleCheckoutExpired(
+  supabase: ReturnType<typeof createServiceClient>,
+  event: Stripe.Event
+) {
+  const session = event.data.object as Stripe.Checkout.Session
+
+  // Mark payment as failed using session ID
+  const { error } = await supabase
+    .from('payments')
+    .update({ status: 'failed' })
+    .eq('stripe_session_id', session.id)
+    .eq('status', 'pending')
+
+  if (error) {
+    console.error('Payment status update error on expiry:', error)
+  }
 }
