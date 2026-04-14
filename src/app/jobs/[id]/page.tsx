@@ -116,6 +116,12 @@ export default async function JobDetailPage({ params, searchParams }: Props) {
           </div>
         )}
 
+        {applied === '1' && isSeeker && (
+          <div className="bg-[#8BC34A]/20 border border-[#8BC34A]/40 rounded-xl px-4 py-3 mb-4 text-[#8BC34A] text-sm">
+            ✓ Вы уже откликнулись на эту вакансию
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main content */}
           <div className="lg:col-span-2 space-y-5">
@@ -231,6 +237,16 @@ export default async function JobDetailPage({ params, searchParams }: Props) {
                 </a>
               )}
             </div>
+
+            {/* Apply button for seekers */}
+            {!isOwner && job.status === 'active' && isSeeker && (
+              <Link
+                href={`/jobs/${id}/apply`}
+                className="block w-full text-center bg-[#8BC34A] text-black font-bold py-3 rounded-xl hover:bg-[#9DD45B] transition-colors text-sm"
+              >
+                Откликнуться на вакансию
+              </Link>
+            )}
 
             {/* Contact block — for seekers and guests */}
             {!isOwner && job.status === 'active' && (

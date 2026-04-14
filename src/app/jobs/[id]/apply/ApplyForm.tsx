@@ -12,7 +12,7 @@ interface Props {
 export default function ApplyForm({ jobId, jobTitle }: Props) {
   const [state, formAction, isPending] = useActionState<ApplicationFormState, FormData>(
     applyToJobAction,
-    {}
+    null
   )
   const [message, setMessage] = useState('')
 
@@ -21,7 +21,7 @@ export default function ApplyForm({ jobId, jobTitle }: Props) {
       <input type="hidden" name="job_id" value={jobId} />
 
       {/* Error banner */}
-      {state.error?._form && (
+      {state?.error?._form && (
         <div className="bg-red-900/20 border border-red-700/40 rounded-xl px-4 py-3 text-red-400 text-sm">
           {state.error._form}
         </div>
@@ -46,7 +46,7 @@ export default function ApplyForm({ jobId, jobTitle }: Props) {
           <p className="text-xs text-gray-500">Необязательно</p>
           <p className="text-xs text-gray-500">{message.length}/1000</p>
         </div>
-        {state.error?.message && (
+        {state?.error?.message && (
           <p className="text-red-400 text-xs mt-1">{state.error.message}</p>
         )}
       </div>

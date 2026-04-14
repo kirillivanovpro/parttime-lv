@@ -4,12 +4,12 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
-export interface ApplicationFormState {
+export type ApplicationFormState = {
   error?: {
     _form?: string
     message?: string
   }
-}
+} | null
 
 const applySchema = z.object({
   job_id: z.string().uuid(),

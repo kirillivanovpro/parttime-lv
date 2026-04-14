@@ -86,14 +86,14 @@ export default async function DashboardPage() {
                 <p className="text-gray-500 text-sm mt-1">Просмотреть доступные вакансии</p>
               </Link>
               <Link
-                href="/profile/me"
+                href="/dashboard/applications"
                 className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5 hover:border-[#8BC34A]/40 transition-colors group"
               >
-                <div className="text-2xl mb-2">👤</div>
+                <div className="text-2xl mb-2">📝</div>
                 <h3 className="font-semibold text-white group-hover:text-[#8BC34A] transition-colors">
-                  Мой профиль
+                  Мои отклики
                 </h3>
-                <p className="text-gray-500 text-sm mt-1">Просмотреть и редактировать резюме</p>
+                <p className="text-gray-500 text-sm mt-1">История откликов на вакансии</p>
               </Link>
             </>
           ) : (
@@ -109,27 +109,22 @@ export default async function DashboardPage() {
                 <p className="text-gray-500 text-sm mt-1">Найти сотрудника на part-time</p>
               </Link>
               <Link
-                href="/profile/me"
+                href="/dashboard/jobs"
                 className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5 hover:border-[#8BC34A]/40 transition-colors group"
               >
-                <div className="text-2xl mb-2">🏢</div>
+                <div className="text-2xl mb-2">📨</div>
                 <h3 className="font-semibold text-white group-hover:text-[#8BC34A] transition-colors">
-                  Профиль компании
+                  Отклики на вакансии
                 </h3>
-                <p className="text-gray-500 text-sm mt-1">Редактировать данные компании</p>
+                <p className="text-gray-500 text-sm mt-1">Просмотр откликов соискателей</p>
               </Link>
             </>
           )}
         </div>
 
-        {/* Stats / links */}
+        {/* Additional links */}
         <div className="space-y-3">
-          {isSeeker ? (
-            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5">
-              <h2 className="font-semibold text-white mb-2">Мои отклики</h2>
-              <p className="text-gray-500 text-sm">Здесь будут отображаться ваши отклики на вакансии.</p>
-            </div>
-          ) : (
+          {!isSeeker && (
             <Link
               href="/dashboard/jobs"
               className="block bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5 hover:border-[#8BC34A]/40 transition-colors group"
