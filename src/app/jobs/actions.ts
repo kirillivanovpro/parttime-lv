@@ -110,10 +110,19 @@ export async function pauseJobAction(jobId: string): Promise<{ error?: string }>
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Не авторизован' }
 
+  const { data: employer } = await supabase
+    .from('employer_profiles')
+    .select('id')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (!employer) return { error: 'Профиль работодателя не найден' }
+
   const { error } = await supabase
     .from('job_postings')
     .update({ status: 'paused' })
     .eq('id', jobId)
+    .eq('employer_id', employer.id)
     .in('status', ['active'])
 
   if (error) return { error: error.message }
@@ -129,14 +138,24 @@ export async function resumeJobAction(jobId: string): Promise<{ error?: string }
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Не авторизован' }
 
-  // Only resume if paid and not expired
+  const { data: employer } = await supabase
+    .from('employer_profiles')
+    .select('id')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (!employer) return { error: 'Профиль работодателя не найден' }
+
+  // Only resume if paid and not expired — verify ownership in same query
   const { data: job } = await supabase
     .from('job_postings')
     .select('is_paid, expires_at')
     .eq('id', jobId)
+    .eq('employer_id', employer.id)
     .single()
 
-  if (!job?.is_paid) return { error: 'Вакансия не оплачена' }
+  if (!job) return { error: 'Вакансия не найдена' }
+  if (!job.is_paid) return { error: 'Вакансия не оплачена' }
   if (job.expires_at && new Date(job.expires_at) < new Date()) {
     return { error: 'Срок действия вакансии истёк' }
   }
@@ -145,6 +164,7 @@ export async function resumeJobAction(jobId: string): Promise<{ error?: string }
     .from('job_postings')
     .update({ status: 'active' })
     .eq('id', jobId)
+    .eq('employer_id', employer.id)
     .eq('status', 'paused')
 
   if (error) return { error: error.message }
@@ -160,10 +180,19 @@ export async function closeJobAction(jobId: string): Promise<{ error?: string }>
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Не авторизован' }
 
+  const { data: employer } = await supabase
+    .from('employer_profiles')
+    .select('id')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (!employer) return { error: 'Профиль работодателя не найден' }
+
   const { error } = await supabase
     .from('job_postings')
     .update({ status: 'closed' })
     .eq('id', jobId)
+    .eq('employer_id', employer.id)
     .in('status', ['active', 'paused', 'draft'])
 
   if (error) return { error: error.message }

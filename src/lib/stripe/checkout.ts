@@ -2,9 +2,9 @@ import stripe from './client'
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
 
-// Prices in euro cents — read from env with fallback
-const PRICE_JOB_POSTING = Number(process.env.PRICE_JOB_POSTING ?? '30')
-const PRICE_CONTACT_UNLOCK = Number(process.env.PRICE_CONTACT_UNLOCK ?? '30')
+// Prices in euro cents — read from env with production-safe fallbacks (1000 = €10, 200 = €2)
+const PRICE_JOB_POSTING = Number(process.env.PRICE_JOB_POSTING ?? '1000')
+const PRICE_CONTACT_UNLOCK = Number(process.env.PRICE_CONTACT_UNLOCK ?? '200')
 
 export async function createJobPostingCheckout({
   jobId,
