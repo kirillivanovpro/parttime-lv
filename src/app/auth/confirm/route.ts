@@ -18,6 +18,35 @@ async function applyPendingOAuthRole(supabase: Awaited<ReturnType<typeof createC
   cookieStore.delete('oauth_pending_role')
 }
 
+async function getPostConfirmRedirect(supabase: Awaited<ReturnType<typeof createClient>>, origin: string): Promise<string> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return `${origin}/onboarding`
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (profile?.role === 'seeker') {
+    const { data: sp } = await supabase
+      .from('seeker_profiles')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+    if (sp) return `${origin}/dashboard`
+  } else if (profile?.role === 'employer') {
+    const { data: ep } = await supabase
+      .from('employer_profiles')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+    if (ep) return `${origin}/dashboard`
+  }
+
+  return `${origin}/onboarding`
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
@@ -30,8 +59,11 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.verifyOtp({ token_hash, type })
 
     if (!error) {
-      const next = type === 'recovery' ? '/auth/update-password' : '/onboarding'
-      return NextResponse.redirect(`${origin}${next}`)
+      if (type === 'recovery') {
+        return NextResponse.redirect(`${origin}/auth/update-password`)
+      }
+      const next = await getPostConfirmRedirect(supabase, origin)
+      return NextResponse.redirect(next)
     }
 
     const msg = error.message.toLowerCase()
@@ -43,9 +75,9 @@ export async function GET(request: NextRequest) {
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      // Apply role selected before OAuth redirect (if any)
       await applyPendingOAuthRole(supabase)
-      return NextResponse.redirect(`${origin}/onboarding`)
+      const next = await getPostConfirmRedirect(supabase, origin)
+      return NextResponse.redirect(next)
     }
   }
 

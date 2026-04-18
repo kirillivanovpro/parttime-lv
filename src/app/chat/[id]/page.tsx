@@ -29,7 +29,7 @@ export default function ChatRoomPage() {
       const [chatRes, msgsRes] = await Promise.all([
         supabase
           .from('chats')
-          .select('*, listing:listings(id, title, category)')
+          .select('*')
           .eq('id', id)
           .single(),
         supabase
@@ -129,11 +129,6 @@ export default function ChatRoomPage() {
         </div>
         <div>
           <div className="font-medium text-white text-sm">{otherUser?.full_name || '—'}</div>
-          {chat?.listing && (
-            <div className="text-[#8BC34A] text-xs truncate max-w-xs">
-              re: {(chat.listing as { title: string }).title}
-            </div>
-          )}
         </div>
       </div>
 
