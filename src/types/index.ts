@@ -10,6 +10,8 @@ export type CategoryType =
 
 export type TransactionType = 'credit' | 'debit' | 'hold' | 'release';
 
+export type UserRole = 'seeker' | 'employer' | 'admin';
+
 export interface Profile {
   id: string;
   full_name: string | null;
@@ -19,6 +21,8 @@ export interface Profile {
   rating_avg: number;
   rating_count: number;
   wallet_balance: number;
+  role: UserRole;
+  plan: string;
   created_at: string;
 }
 
@@ -81,4 +85,69 @@ export interface WalletTransaction {
   created_at: string;
 }
 
+export type ScheduleType = 'flexible' | 'mornings' | 'evenings' | 'weekends';
+
+export interface SeekerProfile {
+  id: string;
+  user_id: string;
+  bio: string | null;
+  skills: string[];
+  experience_years: number;
+  desired_salary: number | null;
+  city: string | null;
+  schedule: ScheduleType | null;
+  cv_url: string | null;
+  is_visible: boolean;
+  updated_at: string;
+}
+
+export interface EmployerProfile {
+  id: string;
+  user_id: string;
+  company_name: string;
+  company_description: string | null;
+  website: string | null;
+  logo_url: string | null;
+  city: string | null;
+  updated_at: string;
+}
+
 export type Lang = 'lv' | 'ru';
+
+export type JobCategory = 'retail' | 'hospitality' | 'warehouse' | 'office' | 'other';
+export type JobStatus = 'draft' | 'active' | 'paused' | 'closed';
+export type JobSchedule = 'mornings' | 'evenings' | 'weekends' | 'flexible' | 'shifts';
+
+export interface JobPosting {
+  id: string;
+  employer_id: string;
+  title: string;
+  description: string;
+  category: JobCategory | null;
+  city: string;
+  salary_min: number | null;
+  salary_max: number | null;
+  schedule: JobSchedule | null;
+  hours_per_week: number | null;
+  status: JobStatus;
+  views: number;
+  is_paid: boolean;
+  expires_at: string | null;
+  created_at: string;
+  updated_at: string;
+  employer_profiles?: EmployerProfile;
+}
+
+export type ApplicationStatus = 'new' | 'viewed' | 'invited' | 'rejected'
+
+export interface Application {
+  id: string
+  job_id: string
+  seeker_id: string
+  message: string | null
+  status: ApplicationStatus
+  created_at: string
+  updated_at: string
+  job_postings?: JobPosting
+  seeker_profiles?: SeekerProfile & { profiles?: { full_name: string | null } }
+}

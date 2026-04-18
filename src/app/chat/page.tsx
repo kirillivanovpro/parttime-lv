@@ -26,7 +26,6 @@ export default function ChatListPage() {
         .from('chats')
         .select(`
           *,
-          listing:listings(id, title, category),
           messages(content, created_at, sender_id)
         `)
         .contains('participant_ids', [user!.id])
@@ -95,11 +94,6 @@ export default function ChatListPage() {
                         {new Date(chat.last_message_at).toLocaleDateString()}
                       </span>
                     </div>
-                    {chat.listing && (
-                      <div className="text-[#8BC34A] text-xs mt-0.5 truncate">
-                        re: {(chat.listing as { title: string }).title}
-                      </div>
-                    )}
                   </div>
                 </div>
               </Link>
