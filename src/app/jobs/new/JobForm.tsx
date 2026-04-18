@@ -1,6 +1,7 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { createJobAction, type JobFormState } from '../actions'
 import { JOB_CATEGORIES, JOB_SCHEDULES } from '@/lib/jobs'
 
@@ -11,10 +12,18 @@ const FieldError = ({ errors }: { errors?: string[] }) =>
   errors?.[0] ? <p className="text-red-400 text-xs mt-1">{errors[0]}</p> : null
 
 export default function JobForm() {
+  const router = useRouter()
   const [state, formAction, isPending] = useActionState<JobFormState, FormData>(
     createJobAction,
     null
   )
+
+  // If action completed without error and without redirect (unexpected), go home
+  useEffect(() => {
+    if (state !== null && !state?.error) {
+      router.push('/')
+    }
+  }, [state, router])
 
   return (
     <form action={formAction} className="space-y-5">

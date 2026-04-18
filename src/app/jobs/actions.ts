@@ -46,59 +46,67 @@ export async function createJobAction(
   _prevState: JobFormState,
   formData: FormData
 ): Promise<JobFormState> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: { _form: 'Не авторизован' } }
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: { _form: 'Не авторизован' } }
 
-  // Verify employer profile exists
-  const { data: employer } = await supabase
-    .from('employer_profiles')
-    .select('id')
-    .eq('user_id', user.id)
-    .maybeSingle()
+    // Verify employer profile exists
+    const { data: employer } = await supabase
+      .from('employer_profiles')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle()
 
-  if (!employer) return { error: { _form: 'Сначала заполните профиль компании' } }
+    if (!employer) return { error: { _form: 'Сначала заполните профиль компании' } }
 
-  const parsed = jobSchema.safeParse({
-    title: formData.get('title'),
-    description: formData.get('description'),
-    category: formData.get('category') || undefined,
-    city: formData.get('city'),
-    salary_min: formData.get('salary_min'),
-    salary_max: formData.get('salary_max'),
-    schedule: formData.get('schedule') || undefined,
-    hours_per_week: formData.get('hours_per_week'),
-  })
-
-  if (!parsed.success) {
-    return { error: parsed.error.flatten().fieldErrors }
-  }
-
-  const { salary_min, salary_max } = parsed.data
-  if (salary_min && salary_max && salary_max < salary_min) {
-    return { error: { _form: 'Максимальная зарплата должна быть не меньше минимальной' } }
-  }
-
-  const { data: job, error } = await supabase
-    .from('job_postings')
-    .insert({
-      employer_id: employer.id,
-      title: parsed.data.title,
-      description: parsed.data.description,
-      category: parsed.data.category ?? null,
-      city: parsed.data.city,
-      salary_min: parsed.data.salary_min ?? null,
-      salary_max: parsed.data.salary_max ?? null,
-      schedule: parsed.data.schedule ?? null,
-      hours_per_week: parsed.data.hours_per_week ?? null,
-      status: 'draft',
+    const parsed = jobSchema.safeParse({
+      title: formData.get('title'),
+      description: formData.get('description'),
+      category: formData.get('category') || undefined,
+      city: formData.get('city'),
+      salary_min: formData.get('salary_min'),
+      salary_max: formData.get('salary_max'),
+      schedule: formData.get('schedule') || undefined,
+      hours_per_week: formData.get('hours_per_week'),
     })
-    .select('id')
-    .single()
 
-  if (error) return { error: { _form: error.message } }
+    if (!parsed.success) {
+      return { error: parsed.error.flatten().fieldErrors }
+    }
 
-  redirect(`/payment/job/${job.id}`)
+    const { salary_min, salary_max } = parsed.data
+    if (salary_min && salary_max && salary_max < salary_min) {
+      return { error: { _form: 'Максимальная зарплата должна быть не меньше минимальной' } }
+    }
+
+    const { data: job, error } = await supabase
+      .from('job_postings')
+      .insert({
+        employer_id: employer.id,
+        title: parsed.data.title,
+        description: parsed.data.description,
+        category: parsed.data.category ?? null,
+        city: parsed.data.city,
+        salary_min: parsed.data.salary_min ?? null,
+        salary_max: parsed.data.salary_max ?? null,
+        schedule: parsed.data.schedule ?? null,
+        hours_per_week: parsed.data.hours_per_week ?? null,
+        status: 'draft',
+      })
+      .select('id')
+      .single()
+
+    if (error) return { error: { _form: error.message } }
+
+    redirect(`/payment/job/${job.id}`)
+  } catch (err: unknown) {
+    // Let Next.js redirect errors propagate — catching them causes stuck isPending
+    const digest = (err as { digest?: string })?.digest
+    if (typeof digest === 'string' && digest.startsWith('NEXT_REDIRECT')) throw err
+    console.error('createJobAction unexpected error:', err)
+    return { error: { _form: 'Произошла ошибка. Попробуйте позже.' } }
+  }
 }
 
 // ──────────────────────────────────────────────
