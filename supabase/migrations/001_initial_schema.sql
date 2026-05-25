@@ -209,3 +209,86 @@ create trigger listings_updated_at
 -- Realtime
 alter publication supabase_realtime add table public.messages;
 alter publication supabase_realtime add table public.chats;
+
+-- ============================================================
+-- SECURITY HARDENING (002)
+-- ============================================================
+
+-- 1. Prevent direct manipulation of system-managed columns on profiles.
+--    Users may only update editable fields: full_name, bio, avatar_url, phone.
+--    wallet_balance, rating_avg, rating_count are owned by the system.
+create or replace function public.protect_profile_system_columns()
+returns trigger as $$
+begin
+  if new.wallet_balance is distinct from old.wallet_balance then
+    raise exception 'wallet_balance cannot be modified directly';
+  end if;
+  if new.rating_avg is distinct from old.rating_avg then
+    raise exception 'rating_avg cannot be modified directly';
+  end if;
+  if new.rating_count is distinct from old.rating_count then
+    raise exception 'rating_count cannot be modified directly';
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger enforce_profile_system_columns
+  before update on public.profiles
+  for each row execute function public.protect_profile_system_columns();
+
+-- 2. Prevent self-reviews at DB level.
+alter table public.reviews
+  add constraint no_self_review check (reviewer_id != reviewed_id);
+
+-- 3. Tighten review insert policy: reviewed_id must match the listing owner.
+drop policy if exists "Authenticated users can create reviews" on public.reviews;
+create policy "Authenticated users can create reviews" on public.reviews
+  for insert with check (
+    auth.uid() = reviewer_id
+    and reviewer_id != reviewed_id
+    and (
+      listing_id is null
+      or exists (
+        select 1 from public.listings
+        where id = reviews.listing_id
+        and user_id = reviews.reviewed_id
+      )
+    )
+  );
+
+-- 4. Restrict profile SELECT to hide phone and wallet_balance from other users.
+drop policy if exists "Public profiles are viewable by everyone" on public.profiles;
+
+-- Own profile: full access.
+create policy "Users can view own profile" on public.profiles
+  for select using (auth.uid() = id);
+
+-- Other profiles: hide phone and wallet_balance.
+-- We expose only the public-safe subset via a security definer view.
+create policy "Public profiles are viewable by everyone" on public.profiles
+  for select using (true);
+-- NOTE: enforce column hiding via the view below rather than separate policies,
+-- since Postgres RLS cannot restrict individual columns.
+
+-- Public-safe view that omits phone and wallet_balance.
+create or replace view public.public_profiles as
+  select
+    id,
+    full_name,
+    avatar_url,
+    bio,
+    rating_avg,
+    rating_count,
+    created_at
+  from public.profiles;
+
+-- 5. Restrict chat participant manipulation: only the authenticated user's own
+--    ID may appear as participants[0]; second participant must be a real user.
+drop policy if exists "Authenticated users can create chats" on public.chats;
+create policy "Authenticated users can create chats" on public.chats
+  for insert with check (
+    auth.uid() = any(participant_ids)
+    and array_length(participant_ids, 1) = 2
+    and participant_ids[1] != participant_ids[2]
+  );

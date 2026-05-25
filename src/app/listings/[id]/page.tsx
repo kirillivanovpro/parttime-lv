@@ -77,6 +77,7 @@ export default function ListingDetailPage() {
 
   async function deleteListing() {
     if (!listing) return;
+    if (!window.confirm(listing.title + ' — permanently delete this listing?')) return;
     setDeleting(true);
     await supabase.from('listings').delete().eq('id', listing.id);
     router.push('/');
@@ -97,7 +98,7 @@ export default function ListingDetailPage() {
     });
 
     if (error) {
-      setReviewError(error.message);
+      setReviewError('Could not submit review. Please try again.');
     } else {
       setShowReviewForm(false);
       // Refresh reviews

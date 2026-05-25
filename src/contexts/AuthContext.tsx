@@ -43,10 +43,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id);
+    // getUser() validates the token with the Supabase server — cannot be spoofed via localStorage
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user ?? null);
+      if (user) {
+        supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
+        fetchProfile(user.id);
+      }
       setLoading(false);
     });
 

@@ -73,7 +73,7 @@ export default function EditListingPage() {
           category,
           title: title.trim(),
           description: description.trim() || null,
-          price: price ? parseFloat(price) : null,
+          price: price ? (isFinite(parseFloat(price)) ? Math.max(0, parseFloat(price)) : null) : null,
           price_unit: priceUnit,
           location: location.trim() || null,
           is_active: isActive,
@@ -81,7 +81,7 @@ export default function EditListingPage() {
         .eq('id', id);
 
       if (error) {
-        setError(error.message);
+        setError('Failed to save changes. Please try again.');
         return;
       }
       router.push(`/listings/${id}`);
